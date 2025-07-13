@@ -96,9 +96,23 @@ export default function DiceResearchApp() {
                 config={experimentConfig}
               />
             </div>
+
+            {/* Statistics Panel moved below charts */}
+            <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Análisis Estadístico</h2>
+              <StatisticsPanel
+                binomialDistribution={binomialDistribution}
+                theoreticalProbabilityForK={theoreticalProbabilityForK}
+                observedProbability={observedProbability}
+                binomialStats={binomialStats}
+                confidenceInterval={confidenceInterval}
+                parameters={parameters}
+                experimentData={experimentData}
+              />
+            </div>
           </div>
 
-          {/* Right Column - Controls and Statistics */}
+          {/* Right Column - Only Control Panel */}
           <div className="space-y-8">
             {/* Control Panel */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
@@ -121,43 +135,6 @@ export default function DiceResearchApp() {
                 isRolling={isRolling}
                 rollDice={rollDice}
               />
-            </div>
-
-            {/* Statistics Panel */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Análisis Estadístico</h2>
-              <StatisticsPanel
-                binomialDistribution={binomialDistribution}
-                theoreticalProbabilityForK={theoreticalProbabilityForK}
-                observedProbability={observedProbability}
-                binomialStats={binomialStats}
-                confidenceInterval={confidenceInterval}
-                parameters={parameters}
-                experimentData={experimentData}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Instructions */}
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-3 text-blue-800 dark:text-blue-200">Instrucciones de Uso</h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-300">
-            <div>
-              <h4 className="font-medium mb-2">1. Configuración del Experimento</h4>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Selecciona el número de dados (1-6)</li>
-                <li>Define los criterios de éxito</li>
-                <li>Establece el número de intentos</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">2. Análisis de Resultados</h4>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Observa las probabilidades teóricas vs experimentales</li>
-                <li>Analiza los gráficos de distribución</li>
-                <li>Exporta los datos para análisis adicional</li>
-              </ul>
             </div>
           </div>
         </div>

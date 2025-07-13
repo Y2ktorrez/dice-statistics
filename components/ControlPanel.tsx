@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface ControlPanelProps {
   config: {
@@ -19,6 +19,7 @@ interface ControlPanelProps {
 
 export default function ControlPanel({ config, onConfigChange, onReset, onExport, currentTrial, isRolling, rollDice }: ControlPanelProps) {
   const [tempCriteria, setTempCriteria] = useState(config.successCriteria.join(","))
+  const [criteriaError, setCriteriaError] = useState("")
 
   const updateConfig = (key: string, value: any) => {
     onConfigChange({
@@ -27,20 +28,58 @@ export default function ControlPanel({ config, onConfigChange, onReset, onExport
     })
   }
 
-  const updateSuccessCriteria = () => {
-    const criteria = tempCriteria
-      .split(",")
-      .map((n) => Number.parseInt(n.trim()))
-      .filter((n) => n >= 1 && n <= 6)
-
-    updateConfig("successCriteria", criteria)
+  const validateCriteria = (input: string) => {
+    const values = input.split(",").map(n => n.trim()).filter(n => n !== "")
+    const invalidValues = []
+    const validNumbers = []
+    
+    for (const value of values) {
+      const num = Number.parseInt(value)
+      if (isNaN(num) || num < 1 || num > 6) {
+        invalidValues.push(value)
+      } else {
+        validNumbers.push(num)
+      }
+    }
+    
+    if (invalidValues.length > 0) {
+      setCriteriaError(`Valores inválidos: ${invalidValues.join(", ")}. Solo se permiten números del 1 al 6.`)
+      return false
+    } else if (validNumbers.length === 0) {
+      setCriteriaError("Debe ingresar al menos un criterio de éxito válido.")
+      return false
+    } else {
+      setCriteriaError("")
+      return true
+    }
   }
+
+  const updateSuccessCriteria = () => {
+    if (validateCriteria(tempCriteria)) {
+      const criteria = tempCriteria
+        .split(",")
+        .map((n) => Number.parseInt(n.trim()))
+        .filter((n) => n >= 1 && n <= 6)
+        .filter((n, index, arr) => arr.indexOf(n) === index) // Remover duplicados
+
+      updateConfig("successCriteria", criteria)
+    }
+  }
+
+  // Validar en tiempo real mientras se escribe
+  useEffect(() => {
+    if (tempCriteria.trim() !== "") {
+      validateCriteria(tempCriteria)
+    } else {
+      setCriteriaError("")
+    }
+  }, [tempCriteria])
 
   const presetConfigurations = [
     { name: "Básico (1 dado, 6)", numDice: 1, successCriteria: [6], numTrials: 50 },
     { name: "Doble (2 dados, 6)", numDice: 2, successCriteria: [6], numTrials: 100 },
     { name: "Números altos (2 dados, 5-6)", numDice: 2, successCriteria: [5, 6], numTrials: 100 },
-    { name: "Múltiple (3 dados, 4-6)", numDice: 3, successCriteria: [4, 5, 6], numTrials: 150 },
+    { name: "Números bajos (2 dados, 1-2)", numDice: 2, successCriteria: [1, 2], numTrials: 100 },
   ]
 
   return (
@@ -52,11 +91,12 @@ export default function ControlPanel({ config, onConfigChange, onReset, onExport
           <input
             type="range"
             min="1"
-            max="6"
+            max="2"
             value={config.numDice}
             onChange={(e) => updateConfig("numDice", Number.parseInt(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           />
+          <p className="text-xs text-gray-500 mt-1">Máximo: 2 dados</p>
         </div>
 
         <div>
@@ -67,15 +107,23 @@ export default function ControlPanel({ config, onConfigChange, onReset, onExport
               value={tempCriteria}
               onChange={(e) => setTempCriteria(e.target.value)}
               placeholder="ej: 5,6"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+              className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 ${
+                criteriaError 
+                  ? "border-red-500 focus:ring-red-500 dark:border-red-500" 
+                  : "border-gray-300 focus:ring-blue-500 dark:border-gray-600"
+              }`}
             />
             <button
               onClick={updateSuccessCriteria}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              disabled={criteriaError !== ""}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               Aplicar
             </button>
           </div>
+          {criteriaError && (
+            <p className="text-xs text-red-500 mt-1 font-medium">{criteriaError}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">Actual: {config.successCriteria.join(", ")}</p>
         </div>
 
