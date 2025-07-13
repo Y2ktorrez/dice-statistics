@@ -15,33 +15,73 @@ interface ExperimentConfig {
   numTrials: number
 }
 
+interface BinomialDistribution {
+  k: number
+  probability: number
+  cumulativeProbability: number
+}
+
 export function useBinomialCalculation(experimentData: ExperimentData[], config: ExperimentConfig) {
   const calculations = useMemo(() => {
-    // Probabilidad de éxito en un solo dado
-    const singleDiceProbability = config.successCriteria.length / 6
+    // Parámetros de la distribución binomial
+    const n = config.numTrials || experimentData.length // número de ensayos
+    const p = 1/6 // probabilidad de éxito (sacar 6 en un dado)
+    const q = 5/6 // probabilidad de fracaso
 
-    // Probabilidad teórica de éxito (al menos un éxito en n dados)
-    const theoreticalProbability = 1 - Math.pow(1 - singleDiceProbability, config.numDice)
+    // Función para calcular el coeficiente binomial C(n,k) = n! / (k! * (n-k)!)
+    const binomialCoefficient = (n: number, k: number): number => {
+      if (k > n || k < 0) return 0
+      if (k === 0 || k === n) return 1
+      
+      let result = 1
+      for (let i = 0; i < k; i++) {
+        result = result * (n - i) / (i + 1)
+      }
+      return result
+    }
 
-    // Probabilidad observada
+    // Calcular la distribución binomial teórica completa
+    const binomialDistribution: BinomialDistribution[] = []
+    let cumulativeSum = 0
+    
+    for (let k = 0; k <= n; k++) {
+      const coefficient = binomialCoefficient(n, k)
+      const probability = coefficient * Math.pow(p, k) * Math.pow(q, n - k)
+      cumulativeSum += probability
+      
+      binomialDistribution.push({
+        k,
+        probability,
+        cumulativeProbability: cumulativeSum
+      })
+    }
+
+    // Contar éxitos observados
+    const observedSuccesses = experimentData.filter(trial => trial.successes > 0).length
     const totalTrials = experimentData.length
-    const totalSuccesses = experimentData.reduce((sum, trial) => sum + (trial.successes > 0 ? 1 : 0), 0)
-    const observedProbability = totalTrials > 0 ? totalSuccesses / totalTrials : 0
+    const observedProbability = totalTrials > 0 ? observedSuccesses / totalTrials : 0
 
     // Estadísticas binomiales
-    const n = config.numTrials
-    const p = theoreticalProbability
-
     const binomialStats = {
+      n: n,
+      p: p,
+      q: q,
       mean: n * p,
-      variance: n * p * (1 - p),
-      standardDeviation: Math.sqrt(n * p * (1 - p)),
+      variance: n * p * q,
+      standardDeviation: Math.sqrt(n * p * q),
+      observedSuccesses: observedSuccesses,
+      totalTrials: totalTrials
+    }
+
+    // Probabilidad teórica de obtener exactamente k éxitos
+    const theoreticalProbabilityForK = (k: number): number => {
+      if (k < 0 || k > n) return 0
+      return binomialCoefficient(n, k) * Math.pow(p, k) * Math.pow(q, n - k)
     }
 
     // Intervalo de confianza (95%)
-    const z = 1.96 // Para 95% de confianza
-    const standardError = Math.sqrt((p * (1 - p)) / Math.max(totalTrials, 1))
-
+    const z = 1.96
+    const standardError = Math.sqrt((p * q) / Math.max(totalTrials, 1))
     const confidenceInterval = {
       lower: Math.max(0, p - z * standardError),
       upper: Math.min(1, p + z * standardError),
@@ -49,10 +89,16 @@ export function useBinomialCalculation(experimentData: ExperimentData[], config:
     }
 
     return {
-      theoreticalProbability,
+      binomialDistribution,
+      theoreticalProbabilityForK,
       observedProbability,
       binomialStats,
       confidenceInterval,
+      parameters: {
+        n,
+        p,
+        q
+      }
     }
   }, [experimentData, config])
 

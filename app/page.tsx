@@ -17,13 +17,31 @@ export default function DiceResearchApp() {
   })
 
   const [darkMode, setDarkMode] = useState(false)
+  const [isRolling, setIsRolling] = useState(false)
 
   const { experimentData, currentTrial, addResult, resetExperiment, exportData } = useExperimentData()
 
-  const { theoreticalProbability, observedProbability, binomialStats, confidenceInterval } = useBinomialCalculation(
-    experimentData,
-    experimentConfig,
-  )
+  const { 
+    binomialDistribution, 
+    theoreticalProbabilityForK, 
+    observedProbability, 
+    binomialStats, 
+    confidenceInterval,
+    parameters 
+  } = useBinomialCalculation(experimentData, experimentConfig)
+
+  const rollDice = () => {
+    if (!isRolling && currentTrial < experimentConfig.numTrials) {
+      setIsRolling(true)
+      // El resultado de los dados se maneja en DiceSimulator3D y se notifica por onResult
+    }
+  }
+
+  // Cuando termina una tirada, DiceSimulator3D debe llamar a setIsRolling(false)
+  const handleResult = (results: number[]) => {
+    addResult(results)
+    setIsRolling(false)
+  }
 
   return (
     <div
@@ -60,7 +78,13 @@ export default function DiceResearchApp() {
           <div className="xl:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Simulador 3D de Dados</h2>
-              <DiceSimulator3D config={experimentConfig} onResult={addResult} currentTrial={currentTrial} />
+              <DiceSimulator3D
+                config={experimentConfig}
+                onResult={handleResult}
+                currentTrial={currentTrial}
+                isRolling={isRolling}
+                rollDice={rollDice}
+              />
             </div>
 
             {/* Charts Section */}
@@ -68,7 +92,7 @@ export default function DiceResearchApp() {
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Análisis Gráfico</h2>
               <ChartsDisplay
                 experimentData={experimentData}
-                theoreticalProbability={theoreticalProbability}
+                theoreticalProbability={parameters.p}
                 config={experimentConfig}
               />
             </div>
@@ -83,8 +107,19 @@ export default function DiceResearchApp() {
                 config={experimentConfig}
                 onConfigChange={setExperimentConfig}
                 onReset={resetExperiment}
-                onExport={exportData}
+                onExport={() =>
+                  exportData({
+                    binomialDistribution,
+                    theoreticalProbabilityForK,
+                    observedProbability,
+                    binomialStats,
+                    confidenceInterval,
+                    parameters,
+                  })
+                }
                 currentTrial={currentTrial}
+                isRolling={isRolling}
+                rollDice={rollDice}
               />
             </div>
 
@@ -92,10 +127,12 @@ export default function DiceResearchApp() {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Análisis Estadístico</h2>
               <StatisticsPanel
-                theoreticalProbability={theoreticalProbability}
+                binomialDistribution={binomialDistribution}
+                theoreticalProbabilityForK={theoreticalProbabilityForK}
                 observedProbability={observedProbability}
                 binomialStats={binomialStats}
                 confidenceInterval={confidenceInterval}
+                parameters={parameters}
                 experimentData={experimentData}
               />
             </div>

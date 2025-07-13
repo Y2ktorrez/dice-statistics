@@ -13,9 +13,11 @@ interface ControlPanelProps {
   onReset: () => void
   onExport: () => void
   currentTrial: number
+  isRolling: boolean
+  rollDice: () => void
 }
 
-export default function ControlPanel({ config, onConfigChange, onReset, onExport, currentTrial }: ControlPanelProps) {
+export default function ControlPanel({ config, onConfigChange, onReset, onExport, currentTrial, isRolling, rollDice }: ControlPanelProps) {
   const [tempCriteria, setTempCriteria] = useState(config.successCriteria.join(","))
 
   const updateConfig = (key: string, value: any) => {
@@ -88,6 +90,16 @@ export default function ControlPanel({ config, onConfigChange, onReset, onExport
             onChange={(e) => updateConfig("numTrials", Number.parseInt(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
           />
+        </div>
+        {/* Botón Lanzar Dados debajo de Número de Intentos */}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={rollDice}
+            disabled={isRolling || currentTrial >= config.numTrials}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-lg transition-colors"
+          >
+            {isRolling ? "Lanzando..." : `Lanzar Dados (${currentTrial}/${config.numTrials})`}
+          </button>
         </div>
       </div>
 

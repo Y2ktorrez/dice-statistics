@@ -70,10 +70,11 @@ interface DiceSimulator3DProps {
   }
   onResult: (results: number[]) => void
   currentTrial: number
+  isRolling: boolean
+  rollDice: () => void
 }
 
-export default function DiceSimulator3D({ config, onResult, currentTrial }: DiceSimulator3DProps) {
-  const [isRolling, setIsRolling] = useState(false)
+export default function DiceSimulator3D({ config, onResult, currentTrial, isRolling, rollDice }: DiceSimulator3DProps) {
   const [diceResults, setDiceResults] = useState<number[]>([])
   const [completedDice, setCompletedDice] = useState(0)
 
@@ -92,17 +93,11 @@ export default function DiceSimulator3D({ config, onResult, currentTrial }: Dice
       onResult(diceResults)
       setCompletedDice(0)
       setDiceResults([])
-      setIsRolling(false)
+      // setIsRolling eliminado, ahora se maneja en el componente principal
     }
   }, [completedDice, config.numDice, diceResults, onResult])
 
-  const rollDice = () => {
-    if (!isRolling && currentTrial < config.numTrials) {
-      setIsRolling(true)
-      setDiceResults(new Array(config.numDice).fill(0))
-      setCompletedDice(0)
-    }
-  }
+  // rollDice ahora viene por props
 
   // Posiciones de los dados en 3D
   const getDicePositions = (numDice: number): [number, number, number][] => {
@@ -148,16 +143,7 @@ export default function DiceSimulator3D({ config, onResult, currentTrial }: Dice
         <Environment preset="studio" />
       </Canvas>
 
-      {/* Controles de la simulación */}
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-        <button
-          onClick={rollDice}
-          disabled={isRolling || currentTrial >= config.numTrials}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-lg transition-colors"
-        >
-          {isRolling ? "Lanzando..." : `Lanzar Dados (${currentTrial}/${config.numTrials})`}
-        </button>
-      </div>
+      {/* El botón de lanzar dados se moverá al ControlPanel */}
     </div>
   )
 }
