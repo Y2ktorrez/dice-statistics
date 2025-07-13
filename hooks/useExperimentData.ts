@@ -9,14 +9,18 @@ interface ExperimentData {
   timestamp: Date
 }
 
-export function useExperimentData() {
+interface ExperimentConfig {
+  successCriteria: number[]
+}
+
+export function useExperimentData(config: ExperimentConfig) {
   const [experimentData, setExperimentData] = useState<ExperimentData[]>([])
   const [currentTrial, setCurrentTrial] = useState(0)
 
   const addResult = useCallback(
     (results: number[]) => {
       const newTrial = currentTrial + 1
-      const successes = results.filter((result) => result >= 5).length // Ejemplo: éxito si es 5 o 6
+      const successes = results.filter((result) => config.successCriteria.includes(result)).length
 
       const newData: ExperimentData = {
         trial: newTrial,
@@ -28,7 +32,7 @@ export function useExperimentData() {
       setExperimentData((prev) => [...prev, newData])
       setCurrentTrial(newTrial)
     },
-    [currentTrial],
+    [currentTrial, config.successCriteria],
   )
 
   const resetExperiment = useCallback(() => {
@@ -77,7 +81,7 @@ export function useExperimentData() {
       // Distribución binomial teórica completa
       if (stats.binomialDistribution && Array.isArray(stats.binomialDistribution)) {
         csvRows.push("Distribucion Binomial Teorica Completa:")
-        csvRows.push("Formula: P(X = k) = C(n,k) × (1/6)^k × (5/6)^(n-k)")
+        csvRows.push(`Formula: P(X = k) = C(n,k) × (${stats.parameters.p.toFixed(4)})^k × (${stats.parameters.q.toFixed(4)})^(n-k)`)
         csvRows.push("")
         csvRows.push("k (numero de exitos),P(X = k),P(X <= k)")
         

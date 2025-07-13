@@ -87,11 +87,11 @@ export default function StatisticsPanel({
           </div>
           <div className="text-center">
             <span className="text-indigo-600 dark:text-indigo-400 font-mono text-lg">p = {parameters.p.toFixed(4)}</span>
-            <p className="text-xs text-indigo-500">Probabilidad de éxito (1/6)</p>
+            <p className="text-xs text-indigo-500">Probabilidad de éxito ({(parameters.p * 6).toFixed(0)}/6)</p>
           </div>
           <div className="text-center">
             <span className="text-indigo-600 dark:text-indigo-400 font-mono text-lg">q = {parameters.q.toFixed(4)}</span>
-            <p className="text-xs text-indigo-500">Probabilidad de fracaso (5/6)</p>
+            <p className="text-xs text-indigo-500">Probabilidad de fracaso ({(parameters.q * 6).toFixed(0)}/6)</p>
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function StatisticsPanel({
           Distribución Binomial Teórica Completa
         </h4>
         <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
-          P(X = k) = C(n,k) × (1/6)^k × (5/6)^(n-k)
+          P(X = k) = C(n,k) × ({parameters.p.toFixed(4)})^k × ({parameters.q.toFixed(4)})^(n-k)
         </p>
         <div className="max-h-40 overflow-y-auto">
           <table className="w-full text-xs">
@@ -177,15 +177,6 @@ export default function StatisticsPanel({
             <span>Límite Superior:</span>
             <span className="font-mono">{(confidenceInterval.upper * 100).toFixed(2)}%</span>
           </div>
-        </div>
-      </div>
-
-      {/* Análisis de convergencia */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-        <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Análisis de Convergencia</h4>
-        <p className="text-sm text-yellow-700 dark:text-yellow-300">{getConvergenceAnalysis()}</p>
-        <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
-          Chi-cuadrado: {calculateChiSquare().toFixed(4)}
         </div>
       </div>
 

@@ -141,28 +141,6 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
         </div>
       </div>
 
-      {/* Análisis Temporal */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Análisis Temporal de Éxitos</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart data={temporalData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="trial" label={{ value: "Número de Intento", position: "insideBottom", offset: -5 }} />
-              <YAxis
-                label={{ value: "Éxitos por Intento", angle: -90, position: "insideLeft" }}
-                domain={[0, config.numDice]}
-              />
-              <Tooltip
-                formatter={(value: number) => [`${value} éxitos`, "Resultado"]}
-                labelFormatter={(value: number) => `Intento ${value}`}
-              />
-              <Scatter dataKey="successes" fill="#10b981" name="Éxitos por Intento" />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {/* Estadísticas resumidas */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
         <h4 className="font-semibold mb-3">Resumen Estadístico de Gráficos</h4>

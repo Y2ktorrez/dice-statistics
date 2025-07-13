@@ -19,7 +19,7 @@ export default function DiceResearchApp() {
   const [darkMode, setDarkMode] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
 
-  const { experimentData, currentTrial, addResult, resetExperiment, exportData } = useExperimentData()
+  const { experimentData, currentTrial, addResult, resetExperiment, exportData } = useExperimentData(experimentConfig)
 
   const { 
     binomialDistribution, 

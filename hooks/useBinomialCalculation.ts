@@ -23,10 +23,10 @@ interface BinomialDistribution {
 
 export function useBinomialCalculation(experimentData: ExperimentData[], config: ExperimentConfig) {
   const calculations = useMemo(() => {
-    // Parámetros de la distribución binomial
+    // Parámetros de la distribución binomial DINÁMICOS
     const n = config.numTrials || experimentData.length // número de ensayos
-    const p = 1/6 // probabilidad de éxito (sacar 6 en un dado)
-    const q = 5/6 // probabilidad de fracaso
+    const p = config.successCriteria.length / 6 // probabilidad de éxito basada en criterios definidos
+    const q = 1 - p // probabilidad de fracaso
 
     // Función para calcular el coeficiente binomial C(n,k) = n! / (k! * (n-k)!)
     const binomialCoefficient = (n: number, k: number): number => {

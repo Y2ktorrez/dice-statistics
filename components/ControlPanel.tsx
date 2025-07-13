@@ -102,33 +102,6 @@ export default function ControlPanel({ config, onConfigChange, onReset, onExport
           </button>
         </div>
       </div>
-
-      {/* Configuraciones predefinidas */}
-      <div>
-        <h3 className="text-lg font-medium mb-3">Configuraciones Predefinidas</h3>
-        <div className="grid grid-cols-1 gap-2">
-          {presetConfigurations.map((preset, index) => (
-            <button
-              key={index}
-              onClick={() =>
-                onConfigChange({
-                  ...config,
-                  numDice: preset.numDice,
-                  successCriteria: preset.successCriteria,
-                  numTrials: preset.numTrials,
-                })
-              }
-              className="p-3 text-left bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              <div className="font-medium">{preset.name}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                {preset.numDice} dados, éxito: {preset.successCriteria.join(",")}, {preset.numTrials} intentos
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Progreso del experimento */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
         <div className="flex justify-between items-center mb-2">
