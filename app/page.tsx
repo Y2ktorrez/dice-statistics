@@ -108,6 +108,7 @@ export default function DiceResearchApp() {
                 confidenceInterval={confidenceInterval}
                 parameters={parameters}
                 experimentData={experimentData}
+                experimentConfig={experimentConfig}
               />
             </div>
           </div>
