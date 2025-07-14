@@ -76,16 +76,6 @@ export function useExperimentData(config: ExperimentConfig) {
         csvRows.push(`Exitos Observados,${stats.binomialStats.observedSuccesses}`)
         csvRows.push("")
       }
-
-      // Resultado de la calculadora de probabilidad binomial
-      if (stats.calculatorResult) {
-        csvRows.push("Resultado de la Calculadora de Probabilidad Binomial:")
-        csvRows.push(`Valor de k,${stats.calculatorResult.k}`)
-        csvRows.push(`P(X = ${stats.calculatorResult.k}),${stats.calculatorResult.probability}`)
-        csvRows.push(`Probabilidad porcentual,${stats.calculatorResult.percentage}%`)
-        csvRows.push(`Coeficiente binomial C(${stats.parameters?.n || 'n'},${stats.calculatorResult.k}),${stats.calculatorResult.binomialCoefficient}`)
-        csvRows.push("")
-      }
     }
 
     const csvContent = csvRows.join("\n")
