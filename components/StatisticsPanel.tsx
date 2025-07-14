@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 
 interface BinomialDistribution {
   k: number
@@ -135,10 +135,14 @@ export default function StatisticsPanel({
     const k = parseInt(calculatorK)
     if (isNaN(k) || k < 0 || k > parameters.n) return null
     
+    const probability = calculateBinomialProbability(k)
+    const coefficient = binomialCoefficient(parameters.n, k)
+    
     return {
       k,
-      probability: calculateBinomialProbability(k),
-      percentage: (calculateBinomialProbability(k) * 100).toFixed(6)
+      probability,
+      percentage: (probability * 100).toFixed(6),
+      binomialCoefficient: coefficient
     }
   }
 

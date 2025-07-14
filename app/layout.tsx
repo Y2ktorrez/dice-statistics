@@ -10,7 +10,12 @@ export const metadata: Metadata = {
   description:
     "Herramienta interactiva para análisis probabilístico de juegos de dados con simulación 3D y cálculos estadísticos avanzados",
   keywords: "estadística, probabilidad, dados, distribución binomial, simulación, análisis",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/dice.ico',
+    shortcut: '/dice.ico',
+    apple: '/dice.ico',
+  }
 }
 
 export default function RootLayout({

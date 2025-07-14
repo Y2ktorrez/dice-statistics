@@ -47,9 +47,9 @@ export function useExperimentData(config: ExperimentConfig) {
     }
 
     const csvRows = [
-      "Intento,Resultados,Exitos,Timestamp",
+      "Intento,Resultados,Exitos",
       ...experimentData.map(
-        (data) => `${data.trial},"${data.results.join(";")}",${data.successes},${data.timestamp.toISOString()}`,
+        (data) => `${data.trial},"${data.results.join(";")}",${data.successes}`,
       ),
     ]
 
@@ -70,59 +70,22 @@ export function useExperimentData(config: ExperimentConfig) {
       // Estadísticas binomiales
       if (stats.binomialStats) {
         csvRows.push("Estadisticas Binomiales:")
-        csvRows.push(`Media (μ),${stats.binomialStats.mean}`)
-        csvRows.push(`Varianza (σ²),${stats.binomialStats.variance}`)
-        csvRows.push(`Desviacion Estandar (σ),${stats.binomialStats.standardDeviation}`)
+        csvRows.push(`Media,${stats.binomialStats.mean}`)
+        csvRows.push(`Varianza,${stats.binomialStats.variance}`)
+        csvRows.push(`Desviacion Estandar,${stats.binomialStats.standardDeviation}`)
         csvRows.push(`Exitos Observados,${stats.binomialStats.observedSuccesses}`)
-        csvRows.push(`Total de Ensayos,${stats.binomialStats.totalTrials}`)
         csvRows.push("")
       }
 
-      // Distribución binomial teórica completa
-      if (stats.binomialDistribution && Array.isArray(stats.binomialDistribution)) {
-        csvRows.push("Distribucion Binomial Teorica Completa:")
-        csvRows.push(`Formula: P(X = k) = C(n,k) × (${stats.parameters.p.toFixed(4)})^k × (${stats.parameters.q.toFixed(4)})^(n-k)`)
-        csvRows.push("")
-        csvRows.push("k (numero de exitos),P(X = k),P(X <= k)")
-        
-        stats.binomialDistribution.forEach((item: any) => {
-          csvRows.push(`${item.k},${item.probability.toFixed(6)},${item.cumulativeProbability.toFixed(6)}`)
-        })
+      // Resultado de la calculadora de probabilidad binomial
+      if (stats.calculatorResult) {
+        csvRows.push("Resultado de la Calculadora de Probabilidad Binomial:")
+        csvRows.push(`Valor de k,${stats.calculatorResult.k}`)
+        csvRows.push(`P(X = ${stats.calculatorResult.k}),${stats.calculatorResult.probability}`)
+        csvRows.push(`Probabilidad porcentual,${stats.calculatorResult.percentage}%`)
+        csvRows.push(`Coeficiente binomial C(${stats.parameters?.n || 'n'},${stats.calculatorResult.k}),${stats.calculatorResult.binomialCoefficient}`)
         csvRows.push("")
       }
-
-      // Intervalo de confianza
-      if (stats.confidenceInterval) {
-        csvRows.push("Intervalo de Confianza (95%):")
-        csvRows.push(`Limite Inferior,${stats.confidenceInterval.lower}`)
-        csvRows.push(`Limite Superior,${stats.confidenceInterval.upper}`)
-        csvRows.push("")
-      }
-
-      // Probabilidad observada
-      if (stats.observedProbability !== undefined) {
-        csvRows.push("Comparacion Teorica vs Observada:")
-        csvRows.push(`Probabilidad Observada,${stats.observedProbability}`)
-        csvRows.push("")
-      }
-
-      // Otros datos estadísticos
-      Object.entries(stats).forEach(([key, value]) => {
-        if (!['parameters', 'binomialStats', 'binomialDistribution', 'confidenceInterval', 'observedProbability'].includes(key)) {
-          if (typeof value === "object" && value !== null) {
-            if (!Array.isArray(value)) {
-              csvRows.push(`${key}:`)
-              Object.entries(value).forEach(([k, v]) => {
-                csvRows.push(`  ${k},${v}`)
-              })
-            } else {
-              csvRows.push(`${key},${value.join(", ")}`)
-            }
-          } else {
-            csvRows.push(`${key},${value}`)
-          }
-        }
-      })
     }
 
     const csvContent = csvRows.join("\n")

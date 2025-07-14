@@ -18,6 +18,12 @@ export default function DiceResearchApp() {
 
   const [darkMode, setDarkMode] = useState(false)
   const [isRolling, setIsRolling] = useState(false)
+  const [calculatorResult, setCalculatorResult] = useState<{
+    k: number
+    probability: number
+    percentage: string
+    binomialCoefficient: number
+  } | null>(null)
 
   const { experimentData, currentTrial, addResult, resetExperiment, exportData } = useExperimentData(experimentConfig)
 
@@ -130,6 +136,7 @@ export default function DiceResearchApp() {
                     binomialStats,
                     confidenceInterval,
                     parameters,
+                    calculatorResult,
                   })
                 }
                 currentTrial={currentTrial}

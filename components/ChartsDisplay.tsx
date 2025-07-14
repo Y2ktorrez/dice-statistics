@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import {
   LineChart,
   Line,
@@ -31,48 +32,54 @@ interface ChartsDisplayProps {
 }
 
 export default function ChartsDisplay({ experimentData, theoreticalProbability, config }: ChartsDisplayProps) {
-  // Datos para gráfico de convergencia
-  const convergenceData = experimentData.map((trial, index) => {
-    const cumulativeSuccesses = experimentData.slice(0, index + 1).reduce((sum, t) => sum + t.successes, 0)
-    const cumulativeTrials = index + 1
-    const observedProbability = cumulativeSuccesses / cumulativeTrials
+  // Optimizar con useMemo para evitar recalcular datos innecesariamente
+  const convergenceData = useMemo(() => {
+    return experimentData.map((trial, index) => {
+      const cumulativeSuccesses = experimentData.slice(0, index + 1).reduce((sum, t) => sum + t.successes, 0)
+      const cumulativeTrials = index + 1
+      const observedProbability = cumulativeSuccesses / cumulativeTrials
 
-    return {
-      trial: trial.trial,
-      observedProbability: observedProbability * 100,
-      theoreticalProbability: theoreticalProbability * 100,
-      difference: Math.abs(observedProbability - theoreticalProbability) * 100,
-    }
-  })
+      return {
+        trial: trial.trial,
+        observedProbability: observedProbability * 100,
+        theoreticalProbability: theoreticalProbability * 100,
+        difference: Math.abs(observedProbability - theoreticalProbability) * 100,
+      }
+    })
+  }, [experimentData, theoreticalProbability])
 
   // Datos para histograma de distribución
-  const distributionData = Array.from({ length: config.numDice + 1 }, (_, i) => {
-    const successCount = i
-    const frequency = experimentData.filter((trial) => trial.successes === successCount).length
-    const probability = experimentData.length > 0 ? frequency / experimentData.length : 0
+  const distributionData = useMemo(() => {
+    return Array.from({ length: config.numDice + 1 }, (_, i) => {
+      const successCount = i
+      const frequency = experimentData.filter((trial) => trial.successes === successCount).length
+      const probability = experimentData.length > 0 ? frequency / experimentData.length : 0
 
-    // Probabilidad teórica binomial
-    const binomialCoeff =
-      factorial(config.numDice) / (factorial(successCount) * factorial(config.numDice - successCount))
-    const theoreticalProb =
-      binomialCoeff *
-      Math.pow(theoreticalProbability, successCount) *
-      Math.pow(1 - theoreticalProbability, config.numDice - successCount)
+      // Probabilidad teórica binomial
+      const binomialCoeff =
+        factorial(config.numDice) / (factorial(successCount) * factorial(config.numDice - successCount))
+      const theoreticalProb =
+        binomialCoeff *
+        Math.pow(theoreticalProbability, successCount) *
+        Math.pow(1 - theoreticalProbability, config.numDice - successCount)
 
-    return {
-      successes: successCount,
-      observed: probability * 100,
-      theoretical: theoreticalProb * 100,
-      frequency,
-    }
-  })
+      return {
+        successes: successCount,
+        observed: probability * 100,
+        theoretical: theoreticalProb * 100,
+        frequency,
+      }
+    })
+  }, [experimentData, theoreticalProbability, config])
 
   // Datos para análisis temporal
-  const temporalData = experimentData.map((trial) => ({
-    trial: trial.trial,
-    successes: trial.successes,
-    timestamp: trial.timestamp.getTime(),
-  }))
+  const temporalData = useMemo(() => {
+    return experimentData.map((trial) => ({
+      trial: trial.trial,
+      successes: trial.successes,
+      timestamp: trial.timestamp.getTime(),
+    }))
+  }, [experimentData])
 
   return (
     <div className="space-y-8">
@@ -81,7 +88,7 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
         <h3 className="text-lg font-semibold mb-4">Convergencia de Probabilidades</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={convergenceData}>
+            <LineChart data={convergenceData} key={`convergence-${experimentData.length}`}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="trial" label={{ value: "Número de Intentos", position: "insideBottom", offset: -5 }} />
               <YAxis label={{ value: "Probabilidad (%)", angle: -90, position: "insideLeft" }} />
@@ -103,6 +110,7 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
                 strokeWidth={2}
                 name="Probabilidad Observada"
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -112,6 +120,7 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
                 strokeDasharray="5 5"
                 name="Probabilidad Teórica"
                 dot={false}
+                isAnimationActive={false}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -123,7 +132,7 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
         <h3 className="text-lg font-semibold mb-4">Distribución de Éxitos</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={distributionData}>
+            <BarChart data={distributionData} key={`distribution-${experimentData.length}`}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="successes" label={{ value: "Número de Éxitos", position: "insideBottom", offset: -5 }} />
               <YAxis label={{ value: "Probabilidad (%)", angle: -90, position: "insideLeft" }} />
@@ -134,8 +143,8 @@ export default function ChartsDisplay({ experimentData, theoreticalProbability, 
                 ]}
               />
               <Legend />
-              <Bar dataKey="observed" fill="#3b82f6" name="Frecuencia Observada" opacity={0.8} />
-              <Bar dataKey="theoretical" fill="#ef4444" name="Frecuencia Teórica" opacity={0.6} />
+              <Bar dataKey="observed" fill="#3b82f6" name="Frecuencia Observada" opacity={0.8} isAnimationActive={false} />
+              <Bar dataKey="theoretical" fill="#ef4444" name="Frecuencia Teórica" opacity={0.6} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
