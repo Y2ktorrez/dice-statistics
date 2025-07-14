@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from 'react'
+
 interface BinomialDistribution {
   k: number
   probability: number
@@ -44,7 +46,6 @@ interface StatisticsPanelProps {
 }
 
 export default function StatisticsPanel({
-  binomialDistribution,
   theoreticalProbabilityForK,
   observedProbability,
   binomialStats,
@@ -53,18 +54,21 @@ export default function StatisticsPanel({
   experimentData,
   experimentConfig,
 }: StatisticsPanelProps) {
+  const [calculatorK, setCalculatorK] = useState<string>('')
   const totalTrials = experimentData.length
   const totalSuccesses = experimentData.reduce((sum, trial) => sum + (trial.successes > 0 ? 1 : 0), 0)
 
-  // Calcular la distribución de éxitos observados
+  // Calcular la distribución de éxitos observados - TODOS los valores únicos de k
   const getObservedSuccessDistribution = () => {
     const distribution = new Map<number, number>()
     
+    // Obtener TODOS los valores únicos de successes que aparecen en los datos
     experimentData.forEach(trial => {
       const successes = trial.successes
       distribution.set(successes, (distribution.get(successes) || 0) + 1)
     })
     
+    // Convertir el Map a array y ordenar por k
     return Array.from(distribution.entries())
       .map(([k, frequency]) => ({
         k,
@@ -99,6 +103,46 @@ export default function StatisticsPanel({
     if (difference < 0.2) return "Convergencia moderada"
     return "Convergencia lenta"
   }
+
+  // Función para calcular coeficiente binomial C(n,k)
+  const binomialCoefficient = (n: number, k: number): number => {
+    if (k > n || k < 0) return 0
+    if (k === 0 || k === n) return 1
+    
+    let result = 1
+    for (let i = 0; i < k; i++) {
+      result = result * (n - i) / (i + 1)
+    }
+    return result
+  }
+
+  // Función para calcular probabilidad binomial P(X = k)
+  const calculateBinomialProbability = (k: number): number => {
+    const n = parameters.n
+    const p = parameters.p
+    const q = parameters.q
+    
+    if (k > n || k < 0) return 0
+    
+    const coefficient = binomialCoefficient(n, k)
+    const probability = coefficient * Math.pow(p, k) * Math.pow(q, n - k)
+    
+    return probability
+  }
+
+  // Obtener resultado de la calculadora
+  const getCalculatorResult = () => {
+    const k = parseInt(calculatorK)
+    if (isNaN(k) || k < 0 || k > parameters.n) return null
+    
+    return {
+      k,
+      probability: calculateBinomialProbability(k),
+      percentage: (calculateBinomialProbability(k) * 100).toFixed(6)
+    }
+  }
+
+  const calculatorResult = getCalculatorResult()
 
   return (
     <div className="space-y-6">
@@ -180,72 +224,80 @@ export default function StatisticsPanel({
         </div>
       </div>
 
-      {/* Distribución de Éxitos Observados */}
-      <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-        <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-3">
-          Cálculos Detallados de Resultados Observados
+      {/* Calculadora de Probabilidad Binomial */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+        <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-3">
+          Calculadora de Probabilidad Binomial
         </h4>
-        <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
-          Fórmula: P(X = k) = C(n,k) × ({parameters.p.toFixed(4)})^k × ({parameters.q.toFixed(4)})^(n-k)
-        </p>
-        {observedDistribution.length > 0 ? (
-          <div className="space-y-4">
-            {observedDistribution.map((item) => {
-              // Calcular coeficiente binomial C(n,k)
-              const binomialCoeff = (n: number, k: number): number => {
-                if (k > n || k < 0) return 0
-                if (k === 0 || k === n) return 1
-                
-                let result = 1
-                for (let i = 0; i < k; i++) {
-                  result = result * (n - i) / (i + 1)
-                }
-                return result
-              }
-              
-              const n = totalTrials
-              const k = item.k
-              const p = parameters.p
-              const q = parameters.q
-              const coeff = binomialCoeff(n, k)
-              
-              return (
-                <div key={item.k} className="bg-white dark:bg-gray-800 p-3 rounded border">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h6 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
-                        Resultado: {k} éxito(s) en {n} intentos
-                      </h6>
-                      <div className="text-xs space-y-1">
-                        <p><strong>Frecuencia observada:</strong> {item.frequency} veces</p>
-                        <p><strong>Probabilidad observada:</strong> {(item.observedProbability * 100).toFixed(2)}%</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h6 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">Cálculo Teórico</h6>
-                      <div className="text-xs space-y-1 font-mono">
-                        <p>P(X = {k}) = C({n},{k}) × ({p.toFixed(4)})^{k} × ({q.toFixed(4)})^{n-k}</p>
-                        <p>C({n},{k}) = {coeff.toFixed(0)}</p>
-                        <p>({p.toFixed(4)})^{k} = {Math.pow(p, k).toFixed(6)}</p>
-                        <p>({q.toFixed(4)})^{n-k} = {Math.pow(q, n-k).toFixed(6)}</p>
-                        <p className="border-t pt-1">
-                          <strong>Resultado = {coeff.toFixed(0)} × {Math.pow(p, k).toFixed(6)} × {Math.pow(q, n-k).toFixed(6)}</strong>
-                        </p>
-                        <p className="text-orange-600 dark:text-orange-400">
-                          <strong>= {(item.theoreticalProbability * 100).toFixed(4)}%</strong>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+        
+        <div className="mb-4">
+          <div className="text-sm text-amber-700 dark:text-amber-300 mb-2">
+            <span className="font-mono bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded">
+              P(X = k) = C(n,k) × p^k × q^(n-k)
+            </span>
           </div>
-        ) : (
-          <p className="text-sm text-orange-600 dark:text-orange-400 italic">
-            No hay datos experimentales disponibles
-          </p>
+          <div className="text-xs text-amber-600 dark:text-amber-400">
+            Con n = {parameters.n}, p = {parameters.p.toFixed(4)}, q = {parameters.q.toFixed(4)}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+              Valor de k (0 ≤ k ≤ {parameters.n}):
+            </label>
+            <input
+              type="number"
+              min="0"
+              max={parameters.n}
+              value={calculatorK}
+              onChange={(e) => setCalculatorK(e.target.value)}
+              className="w-full px-3 py-2 border border-amber-300 dark:border-amber-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              placeholder="Ingresa un valor de k"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+              Resultado:
+            </label>
+            <div className="h-10 px-3 py-2 border border-amber-300 dark:border-amber-600 rounded-md bg-amber-100 dark:bg-amber-900/40 flex items-center">
+              {calculatorResult ? (
+                <span className="font-mono text-amber-800 dark:text-amber-200">
+                  P(X = {calculatorResult.k}) = {calculatorResult.probability.toFixed(8)}
+                </span>
+              ) : (
+                <span className="text-amber-600 dark:text-amber-400 text-sm">
+                  Ingresa un valor válido de k
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {calculatorResult && (
+          <div className="mt-4 p-3 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between">
+                <span className="text-amber-700 dark:text-amber-300">Probabilidad decimal:</span>
+                <span className="font-mono text-amber-800 dark:text-amber-200">
+                  {calculatorResult.probability.toFixed(8)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-amber-700 dark:text-amber-300">Probabilidad porcentual:</span>
+                <span className="font-mono text-amber-800 dark:text-amber-200">
+                  {calculatorResult.percentage}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-amber-700 dark:text-amber-300">Coeficiente binomial C({parameters.n},{calculatorResult.k}):</span>
+                <span className="font-mono text-amber-800 dark:text-amber-200">
+                  {binomialCoefficient(parameters.n, calculatorResult.k).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
